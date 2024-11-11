@@ -302,62 +302,62 @@ const getOutputTypeStyles = (type: Tool["outputs"][0]["type"]) => {
     pipeline: "bg-pink-100 text-pink-800",
     text: "bg-violet-100 text-violet-800",
     image: "bg-cyan-100 text-cyan-800",
+    
   }
   return `${baseStyles} ${typeStyles[type]}`
 }
 
+// Import statements remain the same
+
 export default function ToolsComponent() {
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Keboola AI Tools</h1>
-      <div className="space-y-4">
-        {tools.map((tool) => (
-          <Card key={tool.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-[2fr,3fr,3fr,auto] gap-4 items-center">
-                <div className="flex items-center space-x-3">
-                  {tool.icon}
-                  <span className="font-medium">{tool.name}</span>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  {tool.inputs.map((input, index) => (
-                    <span key={index} className={getInputTypeStyles(input.type)}>
-                      {input.name}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  {tool.outputs.map((output, index) => (
-                    <span key={index} className={getOutputTypeStyles(output.type)}>
-                      {output.name}
-                    </span>
-                  ))}
-                </div>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-auto"
-                        aria-label={`More information about ${tool.name}`}
-                      >
-                        <Info className="h-5 w-5 text-green-500" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{tool.description}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+    <div className="space-y-4">
+      {tools.map((tool) => (
+        <Card key={tool.id} className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-[2fr,3fr,3fr,auto] gap-4 items-center">
+              <div className="flex items-center space-x-3">
+                {tool.icon}
+                <span className="font-medium">{tool.name}</span>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {tool.inputs.map((input, index) => (
+                  <span key={index} className={getInputTypeStyles(input.type)}>
+                    {input.name}
+                  </span>
+                ))}
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {tool.outputs.map((output, index) => (
+                  <span key={index} className={getOutputTypeStyles(output.type)}>
+                    {output.name}
+                  </span>
+                ))}
+              </div>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-auto"
+                      aria-label={`More information about ${tool.name}`}
+                    >
+                      <Info className="h-5 w-5 text-green-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{tool.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }
