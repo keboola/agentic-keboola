@@ -24,11 +24,11 @@ interface Tool {
   icon: React.ReactNode
   inputs: Array<{
     name: string
-    type: "config" | "user" | "storage" | "session" | "table" | "bucket" | "query" | "data" | "model" | "pipeline" | "text" | "image"
+    type: "config" | "user" | "storage" | "session" | "table" | "bucket" | "query" | "data" | "model" | "pipeline" | "text" | "image" | "metrics" | "analysis" | "classification"
   }>
   outputs: Array<{
     name: string
-    type: "job" | "code" | "metadata" | "data" | "visualization" | "config" | "metrics" | "model" | "analysis" | "classification"
+    type: "job" | "code" | "metadata" | "data" | "visualization" | "config" | "metrics" | "model" | "analysis" | "classification" | "pipeline"
   }>
   description: string
 }
@@ -279,7 +279,9 @@ const getInputTypeStyles = (type: Tool["inputs"][0]["type"]) => {
     pipeline: "bg-pink-100 text-pink-800",
     text: "bg-violet-100 text-violet-800",
     image: "bg-cyan-100 text-cyan-800",
-    metrics: "bg-orange-100 text-orange-800"
+    metrics: "bg-orange-100 text-orange-800",
+    analysis: "bg-amber-100 text-amber-800",
+    classification: "bg-teal-100 text-teal-800"
   }
   return `${baseStyles} ${typeStyles[type]}`
 }
@@ -297,7 +299,9 @@ const getOutputTypeStyles = (type: Tool["outputs"][0]["type"]) => {
     model: "bg-red-100 text-red-800",
     analysis: "bg-amber-100 text-amber-800",
     classification: "bg-teal-100 text-teal-800",
-    pipeline: "bg-pink-100 text-pink-800"
+    pipeline: "bg-pink-100 text-pink-800",
+    text: "bg-violet-100 text-violet-800",
+    image: "bg-cyan-100 text-cyan-800",
   }
   return `${baseStyles} ${typeStyles[type]}`
 }
