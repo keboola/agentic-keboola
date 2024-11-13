@@ -193,7 +193,7 @@ export default function Dashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
+                    <AvatarImage src="https://components.keboola.com/images/default-app-icon.png" alt="User" />
                     <AvatarFallback>JD</AvatarFallback>
                   </Avatar>
                   <span className="hidden md:inline">John Doe</span>
@@ -222,7 +222,7 @@ export default function Dashboard() {
           <div className="mb-8 rounded-xl bg-gradient-to-r from-[#0066FF] to-purple-600 p-4 sm:p-6 text-white">
             <div className="flex flex-col sm:flex-row items-start gap-4">
               <div className="rounded-full bg-white p-2">
-                <Image src="/placeholder.svg" alt="Assistant" width={48} height={48} className="rounded-full" />
+                <Image src="https://components.keboola.com/images/default-app-icon.png" alt="Assistant" width={48} height={48} className="rounded-full" />
               </div>
               <div className="flex-1">
                 <Input
@@ -357,7 +357,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src="/placeholder.svg" alt="Dee Cipher" />
+                    <AvatarImage src="https://components.keboola.com/images/default-app-icon.png" alt="Dee Cipher" />
                     <AvatarFallback>DC</AvatarFallback>
                   </Avatar>
                   <span>Dee Cipher</span>

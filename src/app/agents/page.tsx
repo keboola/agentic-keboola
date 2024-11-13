@@ -4,7 +4,7 @@ import { Home } from 'lucide-react'
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Bell, ChevronDown, CpuIcon, LayoutDashboard, LogOut, MoreHorizontal, Plus, Search, Settings, Users } from 'lucide-react'
+import { Bell, ChevronDown, CpuIcon, LayoutDashboard, LogOut, MoreHorizontal, Plus, Search, Settings, Users, MessageSquare } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -117,7 +117,7 @@ export default function AgentsPage() {
               <CardDescription>View and manage your Agentic Keboola agents</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between mb-4">
+              <div className="flex items-center justify-between pb-4">
                 <div className="flex gap-4">
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -140,9 +140,11 @@ export default function AgentsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add Agent
-                </Button>
+                <Link href="/agents/new">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" /> Add Agent
+                  </Button>
+                </Link>
               </div>
               <Table>
                 <TableHeader>
@@ -157,7 +159,11 @@ export default function AgentsPage() {
                 <TableBody>
                   {filteredAgents.map((agent) => (
                     <TableRow key={agent.id}>
-                      <TableCell className="font-medium">{agent.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link href={`/agents/${agent.id}`} className="text-blue-600 hover:underline">
+                          {agent.name}
+                        </Link>
+                      </TableCell>
                       <TableCell>{agent.type}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -170,21 +176,29 @@ export default function AgentsPage() {
                       </TableCell>
                       <TableCell>{agent.lastActive}</TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
+                        <div className="flex gap-2">
+                          <Link href={`/agents/${agent.id}/chat`}>
+                            <Button variant="outline" size="sm">
+                              <MessageSquare className="mr-1 h-4 w-4" />
+                              Chat
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View details</DropdownMenuItem>
-                            <DropdownMenuItem>Edit agent</DropdownMenuItem>
-                            <DropdownMenuItem>Pause agent</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">Delete agent</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </Link>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>View details</DropdownMenuItem>
+                              <DropdownMenuItem>Edit agent</DropdownMenuItem>
+                              <DropdownMenuItem>Pause agent</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-red-600">Delete agent</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
