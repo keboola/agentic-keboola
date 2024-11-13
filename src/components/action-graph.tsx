@@ -1,6 +1,7 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useEffect } from 'react'
 import ReactFlow, {
   ReactFlowProvider,
+  ReactFlowInstance,
   addEdge,
   Background,
   Controls,
@@ -15,10 +16,14 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import ToolSidebar from '@/components/tool-sidebar'
 import CustomNode from '@/components/custom-node'
+import { useParams } from 'next/navigation'
+import { Button } from './ui/button'
 
 export default function ActionGraph() {
+  const { id: agentId } = useParams()
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
   const nodeTypes = {
@@ -61,7 +66,8 @@ export default function ActionGraph() {
         position,
         data: {
           label: toolData.name,
-          toolId: toolData.id, // Pass the tool ID
+          toolId: toolData.id,
+          category: toolData.category,
         },
       }
 
@@ -73,6 +79,45 @@ export default function ActionGraph() {
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
+  }, [])
+
+  // Load graph data on mount
+  useEffect(() => {
+    const fetchGraphData = async () => {
+      const res = await fetch(`/api/agents/${agentId}/action-graph`)
+      if (res.ok) {
+        const data = await res.json()
+        setNodes(data.nodes || [])
+        setEdges(data.edges || [])
+      } else {
+        console.error('Failed to load graph data')
+      }
+    }
+
+    fetchGraphData()
+  }, [agentId])
+
+  // Save graph data function
+  const saveGraph = async () => {
+    if (!reactFlowInstance) return
+
+    const flow = reactFlowInstance.toObject()
+
+    const res = await fetch(`/api/agents/${agentId}/action-graph`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nodes: flow.nodes, edges: flow.edges }),
+    })
+
+    if (res.ok) {
+      alert('Graph saved successfully!')
+    } else {
+      alert('Failed to save graph')
+    }
+  }
+
+  const onInit = useCallback((rfi: ReactFlowInstance) => {
+    setReactFlowInstance(rfi)
   }, [])
 
   return (
@@ -95,11 +140,15 @@ export default function ActionGraph() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
+            onInit={onInit}
             fitView
           >
             <Background color="#aaa" gap={16} />
             <Controls />
           </ReactFlow>
+          <div className="absolute top-4 right-4 z-10">
+            <Button onClick={saveGraph}>Save Graph</Button>
+          </div>
         </ReactFlowProvider>
       </div>
     </div>
