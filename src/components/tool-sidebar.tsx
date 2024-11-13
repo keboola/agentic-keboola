@@ -9,8 +9,10 @@ export default function ToolSidebar() {
   }
 
   return (
-    <aside className="w-64 bg-gray-50 dark:bg-gray-800 p-4 overflow-y-auto">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Tools</h3>
+    <div className="p-4">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+        Tools
+      </h3>
       <div className="mt-4 space-y-2">
         {tools.map((tool) => (
           <div
@@ -21,11 +23,13 @@ export default function ToolSidebar() {
           >
             <div className="flex items-center space-x-2">
               {tool.icon}
-              <span className="text-gray-800 dark:text-gray-100">{tool.name}</span>
+              <span className="text-gray-800 dark:text-gray-100">
+                {tool.name}
+              </span>
             </div>
           </div>
         ))}
       </div>
-    </aside>
+    </div>
   )
 }

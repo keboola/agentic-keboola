@@ -77,7 +77,9 @@ export default function ActionGraph() {
 
   return (
     <div className="flex h-full">
-      <ToolSidebar />
+      <div className="w-64 h-full bg-gray-50 dark:bg-gray-800 overflow-y-auto">
+        <ToolSidebar />
+      </div>
 
       <div
         className="flex-1 h-full"
