@@ -20,7 +20,8 @@ import { useParams } from 'next/navigation'
 import { Button } from './ui/button'
 
 export default function ActionGraph() {
-  const { id: agentId } = useParams()
+  const params = useParams()
+  const agentId = params ? (params.id as string) : null
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)

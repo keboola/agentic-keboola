@@ -4,6 +4,7 @@ import { cn } from '@/app/lib/utils' // Utility for combining class names
 
 export const Dialog = DialogPrimitive.Root
 export const DialogTrigger = DialogPrimitive.Trigger
+export const DialogTitle = DialogPrimitive.Title
 
 export const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
@@ -20,6 +21,8 @@ export const DialogContent = React.forwardRef<
       )}
       {...props}
     >
+      {/* Add hidden DialogTitle for accessibility */}
+      <DialogPrimitive.Title className="sr-only">Dialog</DialogPrimitive.Title>
       {children}
       <DialogPrimitive.Close
         className="absolute top-2 right-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white"

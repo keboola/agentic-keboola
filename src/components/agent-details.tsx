@@ -54,9 +54,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 
-export default function AgentDetails({ agentData }: { agentData: any }) {
+interface AgentData {
+  name?: string
+  created?: string
+}
+
+export default function AgentDetails({ agentData }: { agentData: AgentData }) {
   const router = useRouter()
-  const { id: agentId } = useParams()
+  const params = useParams()
+  const agentId = params?.id as string
   const [agentName] = useState(agentData.name || 'Financial Analyst')
   const [created] = useState(agentData.created || '1.3.2023')
   const [selectedTools, setSelectedTools] = useState<string[]>([])
@@ -287,7 +293,7 @@ export default function AgentDetails({ agentData }: { agentData: any }) {
                   </h2>
                   {/* Render ToolsComponent within the dialog */}
                   <ToolsComponent
-                    agentId={agentId as string}
+                    agentId={agentId}
                     onSave={handleToolsSaved}
                     inDialog={true}
                   />
