@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card'
 import {
   Info, Database, Code, FileText, Cog, Play, Table, BarChart, 
-  Workflow, Zap, Upload, Download, Shield, Brain, Image, 
+  Workflow, Zap, Upload, Download, Shield, Brain, Image as ImageIcon, 
   MessageSquare, Eraser, TrendingUp 
 } from "lucide-react"
 
@@ -162,7 +162,7 @@ export const tools: Tool[] = [
     {
       id: "image-processor",
       name: "Image Processor",
-      icon: <Image className="h-6 w-6 text-cyan-400" />,
+      icon: <ImageIcon className="h-6 w-6 text-cyan-400" />,
       inputs: [
         { name: "Image Input", type: "image" }
       ],

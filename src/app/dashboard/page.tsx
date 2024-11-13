@@ -130,9 +130,9 @@ export default function Dashboard() {
             <div className="flex-1">
               <Input
                 placeholder="How can I help you?"
-                className="mb-4 bg-white/20 text-white placeholder-white/70 sm:mb-0 sm:mr-4"
+                className="mb-4 bg-white/20 text-white placeholder-white/70 sm:mb-4"
               />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
                 <Button variant="secondary" className="h-auto whitespace-normal bg-white/10 p-4 text-left text-sm text-white hover:bg-white/20">
                   Give me revenue projections for our next fiscal year
                 </Button>
@@ -156,7 +156,7 @@ export default function Dashboard() {
             </div>
             <div className="flex gap-2">
               <Button>DETAILS</Button>
-              <Button variant="outline">CLOSE</Button>
+              <Button variant="outline" className="text-white dark:text-white-200">CLOSE</Button>
             </div>
           </div>
           <div className="flex items-center justify-between rounded-lg border bg-white dark:bg-gray-800 p-4">
@@ -166,7 +166,7 @@ export default function Dashboard() {
             </div>
             <div className="flex gap-2">
               <Button>DETAILS</Button>
-              <Button variant="outline">CLOSE</Button>
+              <Button variant="outline" className="text-white dark:text-white-200">CLOSE</Button>
             </div>
           </div>
         </div>
