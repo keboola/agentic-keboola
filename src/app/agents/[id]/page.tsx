@@ -1,22 +1,18 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
-
 import AgentDetails from '@/components/agent-details'
 
 export default function AgentDetailsPage() {
-  const params = useParams()
-  const id = params.id
+  const { id } = useParams()
 
-  // Fetch agent data based on the `id` or use placeholder data
-  const [agentData, setAgentData] = useState({
+  // Fetch or define agent data based on the ID
+  const agentData = {
     id,
     name: 'Agent Name',
-    // ...other agent properties
-  })
+    created: '1.3.2023',
+    // ...other agent-specific data
+  }
 
-  return (
-    <AgentDetails agentData={agentData} />
-  )
+  return <AgentDetails agentData={agentData} />
 }

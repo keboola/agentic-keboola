@@ -1,43 +1,77 @@
 "use client"
 
-import { 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card'
+import {
   Info, Database, Code, FileText, Cog, Play, Table, BarChart, 
   Workflow, Zap, Upload, Download, Shield, Brain, Image, 
   MessageSquare, Eraser, TrendingUp 
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { pipeline } from "stream"
+
+interface InputType {
+  name: string
+  type: keyof typeof inputTypeStyles
+}
+
+interface OutputType {
+  name: string
+  type: keyof typeof outputTypeStyles
+}
 
 interface Tool {
   id: string
   name: string
   icon: React.ReactNode
-  inputs: Array<{
-    name: string
-    type: "config" | "user" | "storage" | "session" | "table" | "bucket" | "query" | "data" | "model" | "pipeline" | "text" | "image" | "metrics" | "analysis" | "classification"
-  }>
-  outputs: Array<{
-    name: string
-    type: "job" | "code" | "metadata" | "data" | "visualization" | "config" | "metrics" | "model" | "analysis" | "classification" | "pipeline"
-  }>
+  inputs: InputType[]
+  outputs: OutputType[]
   description: string
 }
 
-const tools: Tool[] = [
+const inputTypeStyles = {
+  config: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+  user: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100", 
+  storage: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
+  session: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
+  table: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+  bucket: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+  query: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
+  data: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
+  model: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100",
+  pipeline: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100",
+  text: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-100",
+  image: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100",
+  metrics: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
+  analysis: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
+  classification: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100",
+} as const
+
+const outputTypeStyles = {
+  job: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
+  code: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
+  metadata: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100", 
+  data: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+  visualization: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100",
+  config: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100",
+  metrics: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
+  model: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+  analysis: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
+  classification: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100",
+  pipeline: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100",
+  text: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-100",
+  image: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100"
+} as const
+
+export const tools: Tool[] = [
     {
       id: "job-executor",
       name: "Job Executor",
-      icon: <Play className="h-6 w-6 text-blue-500" />,
+      icon: <Play className="h-6 w-6 text-blue-400" />,
       inputs: [
         { name: "Configuration ID", type: "config" }
       ],
@@ -47,9 +81,9 @@ const tools: Tool[] = [
       description: "Executes jobs based on the provided configuration"
     },
     {
-      id: "sql-generator",
+      id: "sql-generator", 
       name: "SQL Generator",
-      icon: <Code className="h-6 w-6 text-purple-500" />,
+      icon: <Code className="h-6 w-6 text-purple-400" />,
       inputs: [
         { name: "User Input", type: "user" },
         { name: "Storage Objects", type: "storage" },
@@ -61,266 +95,159 @@ const tools: Tool[] = [
       description: "Generates SQL queries based on natural language input"
     },
     {
-      id: "data-storage-reader",
-      name: "Data Storage Reader",
-      icon: <Database className="h-6 w-6 text-green-500" />,
+      id: "data-explorer",
+      name: "Data Explorer", 
+      icon: <Database className="h-6 w-6 text-green-400" />,
       inputs: [
-        { name: "Table ID", type: "table" },
-        { name: "Bucket ID", type: "bucket" }
+        { name: "Table Name", type: "table" },
+        { name: "Query Parameters", type: "query" }
       ],
       outputs: [
-        { name: "Table/Bucket Metadata", type: "metadata" },
-        { name: "Data Sample", type: "data" }
+        { name: "Query Results", type: "data" },
+        { name: "Result Metadata", type: "metadata" }
       ],
-      description: "Reads and samples data from storage locations"
+      description: "Explores and analyzes data from database tables"
     },
     {
-      id: "python-generator",
-      name: "Python Generator",
-      icon: <Code className="h-6 w-6 text-yellow-500" />,
+      id: "visualization-creator",
+      name: "Visualization Creator",
+      icon: <BarChart className="h-6 w-6 text-indigo-400" />,
       inputs: [
-        { name: "User Input", type: "user" },
-        { name: "Data Context", type: "data" }
+        { name: "Dataset", type: "data" }
       ],
       outputs: [
-        { name: "Generated Code", type: "code" }
+        { name: "Chart Configuration", type: "visualization" }
       ],
-      description: "Generates Python code for data processing tasks"
+      description: "Creates data visualizations and charts"
     },
     {
-      id: "extractor-config-generator",
-      name: "Extractor Configuration Generator",
-      icon: <Cog className="h-6 w-6 text-indigo-500" />,
+      id: "pipeline-builder",
+      name: "Pipeline Builder",
+      icon: <Workflow className="h-6 w-6 text-pink-400" />,
       inputs: [
-        { name: "Source Type", type: "user" },
-        { name: "Credentials", type: "config" }
+        { name: "Pipeline Config", type: "config" },
+        { name: "Input Data", type: "data" }
       ],
       outputs: [
-        { name: "Extractor Config", type: "config" }
+        { name: "Pipeline Definition", type: "pipeline" }
       ],
-      description: "Generates configuration for data extraction components"
+      description: "Builds data processing pipelines"
     },
     {
-      id: "writer-config-generator",
-      name: "Writer Configuration Generator",
-      icon: <Cog className="h-6 w-6 text-pink-500" />,
-      inputs: [
-        { name: "Destination Type", type: "user" },
-        { name: "Schema", type: "data" }
-      ],
-      outputs: [
-        { name: "Writer Config", type: "config" }
-      ],
-      description: "Generates configuration for data writing components"
-    },
-    {
-      id: "data-profiler",
-      name: "Data Profiler",
-      icon: <BarChart className="h-6 w-6 text-orange-500" />,
-      inputs: [
-        { name: "Table ID", type: "table" }
-      ],
-      outputs: [
-        { name: "Profile Report", type: "data" },
-        { name: "Data Quality Metrics", type: "metrics" }
-      ],
-      description: "Analyzes and profiles data, providing statistical insights"
-    },
-    {
-      id: "transformation-suggester",
-      name: "Transformation Suggester",
-      icon: <Zap className="h-6 w-6 text-yellow-500" />,
-      inputs: [
-        { name: "Source Data", type: "data" },
-        { name: "Target Schema", type: "data" }
-      ],
-      outputs: [
-        { name: "Suggested Transformations", type: "code" }
-      ],
-      description: "Suggests data transformations based on source and target schemas"
-    },
-    {
-      id: "pipeline-optimizer",
-      name: "Pipeline Optimizer",
-      icon: <Workflow className="h-6 w-6 text-blue-500" />,
-      inputs: [
-        { name: "Pipeline Config", type: "pipeline" },
-        { name: "Performance Metrics", type: "metrics" }
-      ],
-      outputs: [
-        { name: "Optimized Pipeline", type: "pipeline" }
-      ],
-      description: "Analyzes and optimizes data pipeline configurations for better performance"
-    },
-    {
-      id: "data-validator",
-      name: "Data Validator",
-      icon: <FileText className="h-6 w-6 text-green-500" />,
-      inputs: [
-        { name: "Data Sample", type: "data" },
-        { name: "Validation Rules", type: "config" }
-      ],
-      outputs: [
-        { name: "Validation Report", type: "data" }
-      ],
-      description: "Validates data against predefined rules and generates a report"
-    },
-    {
-      id: "ml-model-trainer",
-      name: "ML Model Trainer",
-      icon: <Cog className="h-6 w-6 text-purple-500" />,
+      id: "model-trainer",
+      name: "Model Trainer",
+      icon: <Brain className="h-6 w-6 text-red-400" />,
       inputs: [
         { name: "Training Data", type: "data" },
-        { name: "Model Parameters", type: "config" }
-      ],
-      outputs: [
-        { name: "Trained Model", type: "model" },
-        { name: "Performance Metrics", type: "metrics" }
-      ],
-      description: "Trains machine learning models on provided data"
-    },
-    {
-      id: "data-anonymizer",
-      name: "Data Anonymizer",
-      icon: <Shield className="h-6 w-6 text-red-500" />,
-      inputs: [
-        { name: "Source Data", type: "data" },
-        { name: "Anonymization Rules", type: "config" }
-      ],
-      outputs: [
-        { name: "Anonymized Data", type: "data" }
-      ],
-      description: "Anonymizes sensitive data based on predefined rules"
-    },
-    {
-      id: "nlp-processor",
-      name: "NLP Processor",
-      icon: <Brain className="h-6 w-6 text-violet-500" />,
-      inputs: [
-        { name: "Text Input", type: "text" },
-        { name: "Processing Config", type: "config" }
-      ],
-      outputs: [
-        { name: "Processed Text", type: "data" },
-        { name: "NLP Analysis", type: "analysis" }
-      ],
-      description: "Processes and analyzes natural language text using advanced NLP techniques"
-    },
-    {
-      id: "image-classifier",
-      name: "Image Classifier",
-      icon: <Image className="h-6 w-6 text-cyan-500" />,
-      inputs: [
-        { name: "Image Data", type: "image" },
         { name: "Model Config", type: "config" }
       ],
       outputs: [
-        { name: "Classification Results", type: "classification" },
-        { name: "Confidence Scores", type: "data" }
+        { name: "Trained Model", type: "model" },
+        { name: "Training Metrics", type: "metrics" }
       ],
-      description: "Classifies images using pre-trained or custom machine learning models"
+      description: "Trains machine learning models"
     },
     {
-      id: "sentiment-analyzer",
-      name: "Sentiment Analyzer",
-      icon: <MessageSquare className="h-6 w-6 text-amber-500" />,
+      id: "text-analyzer",
+      name: "Text Analyzer",
+      icon: <FileText className="h-6 w-6 text-violet-400" />,
       inputs: [
-        { name: "Text Data", type: "text" },
-        { name: "Analysis Config", type: "config" }
+        { name: "Text Input", type: "text" }
       ],
       outputs: [
-        { name: "Sentiment Scores", type: "data" },
-        { name: "Detailed Analysis", type: "analysis" }
+        { name: "Analysis Results", type: "analysis" }
       ],
-      description: "Analyzes the sentiment and emotional tone of text data"
+      description: "Analyzes text content and extracts insights"
+    },
+    {
+      id: "image-processor",
+      name: "Image Processor",
+      icon: <Image className="h-6 w-6 text-cyan-400" />,
+      inputs: [
+        { name: "Image Input", type: "image" }
+      ],
+      outputs: [
+        { name: "Classification Results", type: "classification" }
+      ],
+      description: "Processes and analyzes images"
     },
     {
       id: "data-cleaner",
       name: "Data Cleaner",
-      icon: <Eraser className="h-6 w-6 text-teal-500" />,
+      icon: <Eraser className="h-6 w-6 text-amber-400" />,
       inputs: [
-        { name: "Raw Data", type: "data" },
-        { name: "Cleaning Rules", type: "config" }
+        { name: "Raw Data", type: "data" }
       ],
       outputs: [
         { name: "Cleaned Data", type: "data" },
-        { name: "Cleaning Report", type: "metrics" }
+        { name: "Data Quality Metrics", type: "metrics" }
       ],
-      description: "Cleanses and preprocesses data by removing duplicates, handling missing values, and standardizing formats"
+      description: "Cleans and preprocesses data"
     },
     {
-      id: "predictive-model",
-      name: "Predictive Model",
-      icon: <TrendingUp className="h-6 w-6 text-rose-500" />,
+      id: "trend-analyzer",
+      name: "Trend Analyzer",
+      icon: <TrendingUp className="h-6 w-6 text-teal-400" />,
       inputs: [
-        { name: "Training Data", type: "data" },
-        { name: "Model Parameters", type: "config" }
+        { name: "Time Series Data", type: "data" }
       ],
       outputs: [
-        { name: "Predictions", type: "data" },
-        { name: "Model Performance", type: "metrics" }
+        { name: "Trend Analysis", type: "analysis" },
+        { name: "Forecast Results", type: "data" }
       ],
-      description: "Creates and applies predictive models for forecasting and pattern recognition"
+      description: "Analyzes trends and generates forecasts"
     }
   ]
 
-const getInputTypeStyles = (type: Tool["inputs"][0]["type"]) => {
+const getInputTypeStyles = (type: keyof typeof inputTypeStyles) => {
   const baseStyles = "px-2.5 py-0.5 rounded-md text-sm font-medium"
-  const typeStyles = {
-    config: "bg-blue-100 text-blue-800",
-    user: "bg-blue-100 text-blue-800",
-    storage: "bg-amber-100 text-amber-800",
-    session: "bg-yellow-100 text-yellow-800",
-    table: "bg-blue-100 text-blue-800",
-    bucket: "bg-blue-100 text-blue-800",
-    query: "bg-purple-100 text-purple-800",
-    data: "bg-green-100 text-green-800",
-    model: "bg-indigo-100 text-indigo-800",
-    pipeline: "bg-pink-100 text-pink-800",
-    text: "bg-violet-100 text-violet-800",
-    image: "bg-cyan-100 text-cyan-800",
-    metrics: "bg-orange-100 text-orange-800",
-    analysis: "bg-amber-100 text-amber-800",
-    classification: "bg-teal-100 text-teal-800"
-  }
-  return `${baseStyles} ${typeStyles[type]}`
+  return `${baseStyles} ${inputTypeStyles[type]}`
 }
 
-const getOutputTypeStyles = (type: Tool["outputs"][0]["type"]) => {
+const getOutputTypeStyles = (type: keyof typeof outputTypeStyles) => {
   const baseStyles = "px-2.5 py-0.5 rounded-md text-sm font-medium"
-  const typeStyles = {
-    job: "bg-green-100 text-green-800",
-    code: "bg-purple-100 text-purple-800",
-    metadata: "bg-yellow-100 text-yellow-800",
-    data: "bg-blue-100 text-blue-800",
-    visualization: "bg-indigo-100 text-indigo-800",
-    config: "bg-pink-100 text-pink-800",
-    metrics: "bg-orange-100 text-orange-800",
-    model: "bg-red-100 text-red-800",
-    analysis: "bg-amber-100 text-amber-800",
-    classification: "bg-teal-100 text-teal-800",
-    pipeline: "bg-pink-100 text-pink-800",
-    text: "bg-violet-100 text-violet-800",
-    image: "bg-cyan-100 text-cyan-800",
-    
-  }
-  return `${baseStyles} ${typeStyles[type]}`
+  return `${baseStyles} ${outputTypeStyles[type]}`
 }
 
-// Import statements remain the same
+export default function ToolsComponent({ agentId }: { agentId: string }) {
+  const router = useRouter()
+  const [selectedTools, setSelectedTools] = useState<string[]>([])
 
-export default function ToolsComponent() {
+  useEffect(() => {
+    // Fetch existing selected tools for the agent
+    const agentsTools = JSON.parse(localStorage.getItem('agentsTools') || '{}')
+    const toolsForAgent = agentsTools[agentId] || []
+    setSelectedTools(toolsForAgent)
+  }, [agentId])
+
+  const handleToolSelection = (toolId: string) => {
+    setSelectedTools((prevSelected) =>
+      prevSelected.includes(toolId)
+        ? prevSelected.filter((id) => id !== toolId)
+        : [...prevSelected, toolId]
+    )
+  }
+
+  const handleSave = () => {
+    // Save selected tools for this agent
+    const agentsTools = JSON.parse(localStorage.getItem('agentsTools') || '{}')
+    agentsTools[agentId] = selectedTools
+    localStorage.setItem('agentsTools', JSON.stringify(agentsTools))
+
+    // Redirect back to the agent details page
+    router.push(`/agents/${agentId}`)
+  }
+
   return (
     <div className="space-y-4">
       {tools.map((tool) => (
-        <Card key={tool.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-[2fr,3fr,3fr,auto] gap-4 items-center">
+        <Card key={tool.id} className="hover:shadow-md transition-shadow bg-white dark:bg-gray-800">
+          <CardContent className="p-6 flex items-center">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-[2fr,3fr,3fr] gap-4 items-center">
               <div className="flex items-center space-x-3">
                 {tool.icon}
-                <span className="font-medium">{tool.name}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-100">{tool.name}</span>
               </div>
-              
               <div className="flex flex-wrap gap-2">
                 {tool.inputs.map((input, index) => (
                   <span key={index} className={getInputTypeStyles(input.type)}>
@@ -328,7 +255,6 @@ export default function ToolsComponent() {
                   </span>
                 ))}
               </div>
-              
               <div className="flex flex-wrap gap-2">
                 {tool.outputs.map((output, index) => (
                   <span key={index} className={getOutputTypeStyles(output.type)}>
@@ -336,28 +262,23 @@ export default function ToolsComponent() {
                   </span>
                 ))}
               </div>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="ml-auto"
-                      aria-label={`More information about ${tool.name}`}
-                    >
-                      <Info className="h-5 w-5 text-green-500" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{tool.description}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            </div>
+            <div className="ml-4">
+              <Checkbox
+                id={tool.id}
+                checked={selectedTools.includes(tool.id)}
+                onCheckedChange={() => handleToolSelection(tool.id)}
+                className="border-gray-500 text-blue-600 dark:text-blue-400"
+              />
             </div>
           </CardContent>
         </Card>
       ))}
+      <div className="flex justify-end mt-4">
+        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white">
+          Save Selected Tools
+        </Button>
+      </div>
     </div>
   )
 }
