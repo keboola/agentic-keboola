@@ -20,26 +20,38 @@ export default function NewAgentForm() {
   const router = useRouter()
   const [agentName, setAgentName] = useState('')
   const [agentDescription, setAgentDescription] = useState('')
+  const [agentType, setAgentType] = useState('')
+  const [agentStatus, setAgentStatus] = useState('Active')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    // Send a POST request to the API route
-    const res = await fetch('/api/agents', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: agentName, description: agentDescription }),
-    })
+    try {
+      const res = await fetch('/api/agents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: agentName,
+          description: agentDescription,
+          type: agentType,
+          status: agentStatus,
+        }),
+      })
 
-    if (res.ok) {
-      const newAgent = await res.json()
-      // Redirect to the agents list page
-      router.push(`/agents`)
-    } else {
-      // Handle error
-      console.error('Failed to create agent')
+      if (res.ok) {
+        const newAgent = await res.json()
+        // Redirect to the agent's detail page
+        router.push(`/agents/${newAgent.id}`)
+      } else {
+        const errorData = await res.json()
+        setErrorMessage(errorData.error || 'Failed to create agent')
+      }
+    } catch (error) {
+      console.error('Error creating agent:', error)
+      setErrorMessage('An unexpected error occurred')
     }
   }
 
@@ -57,12 +69,12 @@ export default function NewAgentForm() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {errorMessage && (
+                <div className="text-red-500">{errorMessage}</div>
+              )}
               <div>
-                <Label
-                  htmlFor="agentName"
-                  className="text-gray-800 dark:text-gray-100"
-                >
-                  Agent Name
+                <Label htmlFor="agentName" className="text-gray-800 dark:text-gray-100">
+                  Name
                 </Label>
                 <Input
                   id="agentName"
@@ -74,10 +86,7 @@ export default function NewAgentForm() {
                 />
               </div>
               <div>
-                <Label
-                  htmlFor="agentDescription"
-                  className="text-gray-800 dark:text-gray-100"
-                >
+                <Label htmlFor="agentDescription" className="text-gray-800 dark:text-gray-100">
                   Description
                 </Label>
                 <Textarea
@@ -86,8 +95,34 @@ export default function NewAgentForm() {
                   onChange={(e) => setAgentDescription(e.target.value)}
                   placeholder="Enter agent description"
                   className="mt-1 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                />
+              </div>
+              <div>
+                <Label htmlFor="agentType" className="text-gray-800 dark:text-gray-100">
+                  Type
+                </Label>
+                <Input
+                  id="agentType"
+                  value={agentType}
+                  onChange={(e) => setAgentType(e.target.value)}
+                  placeholder="Enter agent type"
+                  className="mt-1 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
                   required
                 />
+              </div>
+              <div>
+                <Label htmlFor="agentStatus" className="text-gray-800 dark:text-gray-100">
+                  Status
+                </Label>
+                <select
+                  id="agentStatus"
+                  value={agentStatus}
+                  onChange={(e) => setAgentStatus(e.target.value)}
+                  className="mt-1 w-full bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
               </div>
               <div className="flex justify-end">
                 <Button

@@ -1,60 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 
-type Agent = {
-  id: string
-  name: string
-  description: string
-  type: string
-  status: string
-  lastActive: string
-}
+const prisma = new PrismaClient()
 
-// In-memory agents array
-let agents: Agent[] = [
-  {
-    id: '1',
-    name: 'Agent-001',
-    description: 'Data Processor Agent',
-    type: 'Data Processor',
-    status: 'Active',
-    lastActive: '2 minutes ago',
-  },
-  // ... (other existing agents)
-]
-
-// Helper function to generate unique IDs
-const generateId = () => Math.random().toString(36).substr(2, 9)
-
-// Handle GET and POST requests
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
-
-  if (id) {
-    const agent = agents.find((agent) => agent.id === id)
-    if (agent) {
-      return NextResponse.json(agent)
-    } else {
-      return NextResponse.json({ message: 'Agent not found' }, { status: 404 })
-    }
-  } else {
+export async function GET(_request: NextRequest) {
+  try {
+    const agents = await prisma.agent.findMany()
     return NextResponse.json(agents)
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch agents' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const { name, description } = body
-
-  const newAgent: Agent = {
-    id: generateId(),
-    name,
-    description,
-    type: 'Custom Agent',
-    status: 'Active',
-    lastActive: 'just now',
+  try {
+    const body = await request.json()
+    const { name, description, type, status } = body
+    const newAgent = await prisma.agent.create({
+      data: { name, description, type, status },
+    })
+    return NextResponse.json(newAgent, { status: 201 })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to create agent' }, { status: 400 })
   }
-
-  agents.push(newAgent)
-  return NextResponse.json(newAgent, { status: 201 })
 }
