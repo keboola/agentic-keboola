@@ -22,6 +22,7 @@ model Agent {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   actions     Action[]
+  actionGraph Json?
 }
 
 model Action {

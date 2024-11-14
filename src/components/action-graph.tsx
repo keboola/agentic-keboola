@@ -1,156 +1,165 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react'
-import ReactFlow, {
-  ReactFlowProvider,
-  ReactFlowInstance,
-  addEdge,
-  Background,
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import ReactFlow, { 
+  addEdge, 
+  applyEdgeChanges, 
+  applyNodeChanges, 
+  Background, 
   Controls,
-  Connection,
-  Edge,
-  applyEdgeChanges,
-  applyNodeChanges,
-  Node,
-  EdgeChange,
-  NodeChange,
+  Panel
 } from 'reactflow'
 import 'reactflow/dist/style.css'
+import { GraphNode, GraphEdge } from '@/types/graph'
 import ToolSidebar from '@/components/tool-sidebar'
+import { Tool } from '@/types/tool'
 import CustomNode from '@/components/custom-node'
-import { useParams } from 'next/navigation'
-import { Button } from './ui/button'
+
+interface NodeData {
+  label: string
+  toolId: string
+  category: 'tool' | 'workflow'
+}
 
 export default function ActionGraph() {
   const params = useParams()
-  const agentId = params ? (params.id as string) : null
-  const [nodes, setNodes] = useState<Node[]>([])
-  const [edges, setEdges] = useState<Edge[]>([])
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
-  const reactFlowWrapper = useRef<HTMLDivElement>(null)
+  const agentId = params?.id as string
+
+  const [nodes, setNodes] = useState<GraphNode[]>([])
+  const [edges, setEdges] = useState<GraphEdge[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const nodeTypes = {
-    customNode: CustomNode,
+    custom: CustomNode,
   }
 
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    []
-  )
-
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    []
-  )
-
-  const onConnect = useCallback(
-    (connection: Edge | Connection) => setEdges((eds) => addEdge(connection, eds)),
-    []
-  )
-
-  const onDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault()
-
-      const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect()
-      const data = event.dataTransfer.getData('application/reactflow')
-      const toolData = JSON.parse(data)
-
-      if (!toolData || !reactFlowBounds) return
-
-      const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      }
-
-      const newNode: Node = {
-        id: `${toolData.id}_${Date.now()}`,
-        type: 'customNode',
-        position,
-        data: {
-          label: toolData.name,
-          toolId: toolData.id,
-          category: toolData.category,
-        },
-      }
-
-      setNodes((nds) => nds.concat(newNode))
-    },
-    [setNodes]
-  )
-
-  const onDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-  }, [])
-
-  // Load graph data on mount
   useEffect(() => {
-    const fetchGraphData = async () => {
-      const res = await fetch(`/api/agents/${agentId}/action-graph`)
-      if (res.ok) {
-        const data = await res.json()
-        setNodes(data.nodes || [])
-        setEdges(data.edges || [])
-      } else {
-        console.error('Failed to load graph data')
+    const fetchActionGraph = async () => {
+      try {
+        const res = await fetch(`/api/agents/${agentId}/action-graph`)
+        if (res.ok) {
+          const data = await res.json()
+          const loadedNodes = data.nodes.map((node: any) => ({
+            ...node,
+            type: 'custom',
+            data: { 
+              label: node.data.label || '',
+              toolId: node.data.toolId,
+              category: node.data.category
+            } as NodeData,
+          }))
+          setNodes(loadedNodes)
+          setEdges(data.edges || [])
+        } else {
+          console.error('Failed to fetch action graph:', res.status, res.statusText)
+        }
+      } catch (error) {
+        console.error('Error fetching action graph:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
-    fetchGraphData()
+    if (agentId) {
+      fetchActionGraph()
+    }
   }, [agentId])
 
-  // Save graph data function
-  const saveGraph = async () => {
-    if (!reactFlowInstance) return
+  const onDragStart = (event: React.DragEvent, nodeType: string) => {
+    event.dataTransfer.setData('application/reactflow', nodeType)
+    event.dataTransfer.effectAllowed = 'move'
+  }
 
-    const flow = reactFlowInstance.toObject()
+  const onDrop = (event: React.DragEvent) => {
+    event.preventDefault()
 
-    const res = await fetch(`/api/agents/${agentId}/action-graph`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nodes: flow.nodes, edges: flow.edges }),
-    })
+    const reactFlowBounds = event.currentTarget.getBoundingClientRect()
+    const data = event.dataTransfer.getData('application/reactflow')
+    if (!data) {
+      return
+    }
 
-    if (res.ok) {
-      alert('Graph saved successfully!')
-    } else {
-      alert('Failed to save graph')
+    const tool = JSON.parse(data) as Tool
+    const position = {
+      x: event.clientX - reactFlowBounds.left,
+      y: event.clientY - reactFlowBounds.top,
+    }
+
+    const newNode: GraphNode = {
+      id: `node_${nodes.length + 1}`,
+      type: 'custom',
+      position,
+      data: { 
+        label: tool.name,
+        toolId: tool.id,
+        category: tool.category
+      } as NodeData,
+    }
+
+    setNodes((nds) => nds.concat(newNode))
+  }
+
+  const onDragOver = (event: React.DragEvent) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`/api/agents/${agentId}/action-graph`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nodes, edges }),
+      })
+      if (res.ok) {
+        console.log('Action graph saved successfully')
+      } else {
+        console.error('Failed to save action graph:', res.status, res.statusText)
+      }
+    } catch (error) {
+      console.error('Error saving action graph:', error)
     }
   }
 
-  const onInit = useCallback((rfi: ReactFlowInstance) => {
-    setReactFlowInstance(rfi)
-  }, [])
+  if (isLoading) {
+    return <div>Loading action graph...</div>
+  }
 
   return (
-    <div className="flex h-full">
-      <div className="w-64 h-full bg-gray-50 dark:bg-gray-800 overflow-y-auto">
+    <div style={{ width: '100%', height: '500px', display: 'flex' }}>
+      <div style={{ width: '200px' }}>
         <ToolSidebar />
       </div>
-
-      <div
-        className="flex-1 h-full"
-        ref={reactFlowWrapper}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-      >
-        <ReactFlowProvider>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            onInit={onInit}
-            fitView
-          >
-            <Background color="#aaa" gap={16} />
-            <Controls />
-          </ReactFlow>
-          <div className="absolute top-4 right-4 z-10">
-            <Button onClick={saveGraph}>Save Graph</Button>
-          </div>
-        </ReactFlowProvider>
+      <div style={{ flexGrow: 1 }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={(changes) => {
+            setNodes((nds) =>
+              applyNodeChanges(changes, nds)
+            )
+          }}
+          onEdgesChange={(changes) => {
+            setEdges((eds) =>
+              applyEdgeChanges(changes, eds)
+            )
+          }}
+          onConnect={(params) => {
+            setEdges((eds) => addEdge({...params, id: `e${eds.length + 1}`}, eds))
+          }}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+        >
+          <Background />
+          <Controls />
+        </ReactFlow>
+        <button onClick={handleSave} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+          Save Action Graph
+        </button>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 
-// Mock database for agent action graphs
-let agentGraphs: Record<string, { nodes: any[]; edges: any[] }> = {}
+const prisma = new PrismaClient()
 
 // GET /api/agents/{id}/action-graph
 export async function GET(
@@ -9,8 +9,22 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id: agentId } = params
-  const graphData = agentGraphs[agentId] || { nodes: [], edges: [] }
-  return NextResponse.json(graphData)
+
+  try {
+    const agent = await prisma.agent.findUnique({
+      where: { id: agentId },
+      select: { actionGraph: true },
+    })
+
+    if (agent) {
+      return NextResponse.json(agent.actionGraph || { nodes: [], edges: [] })
+    } else {
+      return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
+    }
+  } catch (error) {
+    console.error('Error fetching action graph:', error)
+    return NextResponse.json({ error: 'Failed to fetch action graph' }, { status: 500 })
+  }
 }
 
 // POST /api/agents/{id}/action-graph
@@ -19,9 +33,18 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const { id: agentId } = params
-  const graphData = await request.json()
 
-  agentGraphs[agentId] = graphData
+  try {
+    const graphData = await request.json()
 
-  return NextResponse.json({ message: 'Graph saved successfully' })
+    const updatedAgent = await prisma.agent.update({
+      where: { id: agentId },
+      data: { actionGraph: graphData },
+    })
+
+    return NextResponse.json({ message: 'Graph saved successfully' })
+  } catch (error) {
+    console.error('Error saving action graph:', error)
+    return NextResponse.json({ error: 'Failed to save action graph' }, { status: 500 })
+  }
 }

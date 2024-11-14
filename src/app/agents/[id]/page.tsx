@@ -2,6 +2,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AgentDetails from '@/components/agent-details'
+import ActionGraph from '@/components/action-graph'
 
 export default function AgentDetailsPage() {
   const params = useParams()
@@ -45,5 +46,10 @@ export default function AgentDetailsPage() {
     return <div>Loading...</div>
   }
 
-  return <AgentDetails agentData={agentData} />
+  return (
+    <>
+      <AgentDetails agentData={agentData} />
+      <ActionGraph />
+    </>
+  )
 }
